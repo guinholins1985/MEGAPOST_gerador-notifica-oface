@@ -169,40 +169,52 @@ export const NotificationGenerator: React.FC = () => {
   
     try {
       if (format === 'png') {
-        const dataUrl = await htmlToImage.toPng(element, { quality: 1 });
+        const dataUrl = await htmlToImage.toPng(element, { 
+          quality: 1,
+          pixelRatio: 2,
+          cacheBust: true,
+        });
         const link = document.createElement('a');
         link.download = 'notificacao.png';
         link.href = dataUrl;
         link.click();
-        setLoading(format, false);
       } else if (format === 'gif') {
         const scroller = scrollRef.current;
         if (!scroller) {
-            setLoading(format, false);
-            return;
+            throw new Error("Elemento de rolagem não encontrado.");
         }
 
         const gif = new GIF({ workers: 2, quality: 10, workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js' });
-        const animationDuration = 4000;
-        const frameRate = 20;
-        const frameDelay = 1000 / frameRate;
-        const frameCount = animationDuration / frameDelay;
-
-        const scrollDistance = scroller.scrollHeight - scroller.clientHeight;
         
-        scroller.scrollTop = 0; // Reset scroll before starting
-        await new Promise(r => setTimeout(r, 100)); // wait for DOM to update
-
-        for (let i = 0; i < frameCount; i++) {
-            if (scrollDistance > 0) {
+        const scrollDistance = scroller.scrollHeight - scroller.clientHeight;
+        scroller.scrollTop = 0;
+        await new Promise(r => setTimeout(r, 200)); 
+        
+        if (scrollDistance <= 0) {
+            const canvas = await html2canvas(element, { useCORS: true, backgroundColor: null });
+            gif.addFrame(canvas, { delay: 2000 });
+        } else {
+            const animationDuration = 4000;
+            const frameRate = 20; 
+            const frameDelay = 1000 / frameRate; 
+            const frameCount = animationDuration / frameDelay;
+            
+            for (let i = 0; i < frameCount; i++) {
                 const progress = i / (frameCount - 1);
                 scroller.scrollTop = progress * scrollDistance;
+                
+                await new Promise(r => setTimeout(r, 20)); 
+                
+                const canvas = await html2canvas(element, { 
+                    useCORS: true, 
+                    backgroundColor: null,
+                    logging: false
+                });
+                gif.addFrame(canvas, { delay: frameDelay });
             }
-            const canvas = await html2canvas(element, { useCORS: true, backgroundColor: null });
-            gif.addFrame(canvas, { delay: frameDelay });
         }
         
-        scroller.scrollTop = 0; // Reset scroll after finishing
+        scroller.scrollTop = 0; 
   
         gif.on('finished', (blob: Blob) => {
           const link = document.createElement('a');
@@ -212,19 +224,25 @@ export const NotificationGenerator: React.FC = () => {
           setLoading(format, false);
         });
         gif.render();
+        return; 
       }
     } catch (error) {
       console.error(`Error downloading as ${format}:`, error);
-      alert(`Ocorreu um erro ao baixar o ${format}. Tente novamente.`);
-      setLoading(format, false);
+      alert(`Ocorreu um erro ao baixar o ${format}. Verifique o console para mais detalhes.`);
     }
+    setLoading(format, false);
   };
   
   const handleOpenInTab = async () => {
     if (!phoneRef.current) return;
-    const dataUrl = await htmlToImage.toPng(phoneRef.current, { quality: 1 });
-    const newWindow = window.open();
-    newWindow?.document.write(`<img src="${dataUrl}" alt="Notificação Gerada" style="max-width: 100%; height: auto;"/>`);
+    try {
+      const dataUrl = await htmlToImage.toPng(phoneRef.current, { quality: 1, pixelRatio: 2 });
+      const newWindow = window.open();
+      newWindow?.document.write(`<body style="margin:0; background: #222;"><img src="${dataUrl}" alt="Notificação Gerada" style="max-width: 100%; height: auto;"/></body>`);
+    } catch(error) {
+       console.error("Error opening in new tab:", error);
+       alert("Não foi possível abrir a imagem em uma nova aba.");
+    }
   };
 
   const handleNotificationChange = (field: keyof Omit<NotificationData, 'id'>, value: any) => {
