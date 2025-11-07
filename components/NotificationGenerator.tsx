@@ -53,7 +53,6 @@ export const NotificationGenerator: React.FC = () => {
     const newNotif: NotificationData = {
         ...selectedNotification,
         id: crypto.randomUUID(),
-        amount: Math.round((Math.random() * 500) * 100) / 100,
         recipient: "Novo Destinatário",
         timestamp: 'agora',
     };
@@ -374,19 +373,19 @@ export const NotificationGenerator: React.FC = () => {
           zoomLevel={zoomLevel}
           isAnimating={isAnimating}
         />
-        <div className="flex items-center gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-md backdrop-blur-sm">
+        <div className="flex items-center flex-wrap justify-center gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-md backdrop-blur-sm">
           <button onClick={() => setZoomLevel(z => z + 0.1)} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><ZoomInIcon/></button>
           <button onClick={() => setZoomLevel(z => Math.max(0.2, z - 0.1))} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><ZoomOutIcon/></button>
-          <div className="relative group">
-              <button disabled={isLoading.png || isLoading.gif} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center gap-2 bg-indigo-600 text-white disabled:bg-indigo-400">
-                  {isLoading.png || isLoading.gif ? <SpinnerIcon/> : <DownloadIcon/>}
-                  <span>Baixar</span>
-              </button>
-              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-32 bg-white dark:bg-gray-700 rounded-md shadow-lg overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                  <button onClick={() => handleDownload('png')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">Imagem (PNG)</button>
-                  <button onClick={() => handleDownload('gif')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600">Animação (GIF)</button>
-              </div>
-          </div>
+          
+          <button onClick={() => handleDownload('png')} disabled={isLoading.png} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center gap-2 bg-blue-600 text-white disabled:bg-blue-400">
+              {isLoading.png ? <SpinnerIcon/> : <DownloadIcon/>}
+              <span>Baixar PNG</span>
+          </button>
+          <button onClick={() => handleDownload('gif')} disabled={isLoading.gif} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center gap-2 bg-purple-600 text-white disabled:bg-purple-400">
+              {isLoading.gif ? <SpinnerIcon/> : <DownloadIcon/>}
+              <span>Baixar GIF</span>
+          </button>
+          
           <button onClick={handleOpenInTab} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><ExternalLinkIcon/></button>
           <button onClick={() => handleDeleteNotification(selectedId)} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-red-500"><TrashIcon/></button>
         </div>
