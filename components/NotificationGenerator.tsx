@@ -7,7 +7,6 @@ import { BANKS, TRANSACTION_TYPES } from '../data/options';
 import { PhoneSimulator } from './PhoneSimulator';
 import { MagicWandIcon, UploadIcon, DownloadIcon, TrashIcon, ZoomInIcon, ZoomOutIcon, ExternalLinkIcon, SpinnerIcon } from './icons';
 
-declare const htmlToImage: any;
 declare const html2canvas: any;
 declare const GIF: any;
 
@@ -169,11 +168,12 @@ export const NotificationGenerator: React.FC = () => {
   
     try {
       if (format === 'png') {
-        const dataUrl = await htmlToImage.toPng(element, { 
-          quality: 1,
-          pixelRatio: 2,
-          cacheBust: true,
+        const canvas = await html2canvas(element, {
+            useCORS: true,
+            backgroundColor: null,
+            scale: 2,
         });
+        const dataUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
         link.download = 'notificacao.png';
         link.href = dataUrl;
@@ -203,7 +203,7 @@ export const NotificationGenerator: React.FC = () => {
                 const progress = i / (frameCount - 1);
                 scroller.scrollTop = progress * scrollDistance;
                 
-                await new Promise(r => setTimeout(r, 20)); 
+                await new Promise(r => setTimeout(r, 30)); 
                 
                 const canvas = await html2canvas(element, { 
                     useCORS: true, 
@@ -228,7 +228,7 @@ export const NotificationGenerator: React.FC = () => {
       }
     } catch (error) {
       console.error(`Error downloading as ${format}:`, error);
-      alert(`Ocorreu um erro ao baixar o ${format}. Verifique o console para mais detalhes.`);
+      alert(`Ocorreu um erro ao baixar o ${format}. Isso pode ser causado por imagens de papel de parede de outras origens (CORS). Tente um papel de parede padrão ou faça upload de uma imagem. Verifique o console para mais detalhes.`);
     }
     setLoading(format, false);
   };
@@ -236,12 +236,17 @@ export const NotificationGenerator: React.FC = () => {
   const handleOpenInTab = async () => {
     if (!phoneRef.current) return;
     try {
-      const dataUrl = await htmlToImage.toPng(phoneRef.current, { quality: 1, pixelRatio: 2 });
+      const canvas = await html2canvas(phoneRef.current, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 2,
+      });
+      const dataUrl = canvas.toDataURL('image/png');
       const newWindow = window.open();
       newWindow?.document.write(`<body style="margin:0; background: #222;"><img src="${dataUrl}" alt="Notificação Gerada" style="max-width: 100%; height: auto;"/></body>`);
     } catch(error) {
        console.error("Error opening in new tab:", error);
-       alert("Não foi possível abrir a imagem em uma nova aba.");
+       alert("Não foi possível abrir a imagem em uma nova aba. Isso pode ser um problema de CORS com o papel de parede.");
     }
   };
 
