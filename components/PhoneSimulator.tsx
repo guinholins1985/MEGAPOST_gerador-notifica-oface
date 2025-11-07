@@ -9,7 +9,7 @@ interface PhoneSimulatorProps {
   statusBarSettings: StatusBarSettings;
   notifications: NotificationData[];
   zoomLevel: number;
-  isAnimating: boolean;
+  scrollRef: React.RefObject<HTMLDivElement>;
 }
 
 export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
@@ -18,7 +18,7 @@ export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
   statusBarSettings,
   notifications,
   zoomLevel,
-  isAnimating,
+  scrollRef,
 }, ref) => {
   const containerStyle: CSSProperties = {
     transform: `scale(${zoomLevel})`,
@@ -73,13 +73,15 @@ export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
             <div style={wallpaperStyle}></div>
             <StatusBar settings={statusBarSettings} />
             {phoneModel.styles.notch && <div style={notchStyle}></div>}
-            <div className="absolute inset-0 top-10 overflow-y-auto p-4 scrollbar-hide">
-              <div className={isAnimating ? 'animate-scroll-list' : ''}>
-                  <div className="space-y-3">
-                    {notifications.map(notification => (
-                        <NotificationPreview key={notification.id} notification={notification} />
-                    ))}
-                  </div>
+            <div 
+              ref={scrollRef} 
+              className="absolute inset-0 top-10 overflow-y-auto p-4 scrollbar-hide"
+              style={{ maskImage: 'linear-gradient(to bottom, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 90%, transparent 100%)' }}
+            >
+              <div className="space-y-3">
+                {notifications.map(notification => (
+                    <NotificationPreview key={notification.id} notification={notification} />
+                ))}
               </div>
             </div>
           </div>

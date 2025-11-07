@@ -35,11 +35,11 @@ export const NotificationGenerator: React.FC = () => {
     time: '09:41', wifi: true, signal: 4, battery: 88,
   });
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [wallpaperPrompt, setWallpaperPrompt] = useState('A beautiful abstract wallpaper');
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
   
   const phoneRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   const selectedNotification = notifications.find(n => n.id === selectedId) || null;
 
@@ -111,9 +111,10 @@ export const NotificationGenerator: React.FC = () => {
       } else {
         const prompt = field === 'recipient'
           ? "Gere um nome completo de uma pessoa, real ou fictícia. Retorne apenas o nome."
-          : "Gere um texto de carimbo de data/hora para uma notificação. Retorne APENAS o texto. Exemplos de formatos aceitáveis: 'agora', 'há 5 minutos', '15:30', 'ontem às 21:00', 'agora mesmo'. Varie entre esses formatos.";
+          : "Gere um texto de horário para uma notificação. Exemplos de formatos: 'agora', 'há 5 minutos', '15:30', 'ontem às 21:00'. Responda *somente* com o texto gerado, sem explicações ou formatação extra.";
         const response = await ai.models.generateContent({model: 'gemini-2.5-flash', contents: prompt });
-        handleNotificationChange(field, response.text.trim());
+        const cleanedText = response.text.trim().replace(/['"`*]/g, '');
+        handleNotificationChange(field, cleanedText);
       }
     } catch (error) {
       console.error(`Error generating ${field} with AI:`, error);
@@ -173,19 +174,35 @@ export const NotificationGenerator: React.FC = () => {
         link.download = 'notificacao.png';
         link.href = dataUrl;
         link.click();
+        setLoading(format, false);
       } else if (format === 'gif') {
-        setIsAnimating(true);
+        const scroller = scrollRef.current;
+        if (!scroller) {
+            setLoading(format, false);
+            return;
+        }
+
         const gif = new GIF({ workers: 2, quality: 10, workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js' });
-        const animationDuration = 4000; // ms
-        const frameRate = 15;
+        const animationDuration = 4000;
+        const frameRate = 20;
         const frameDelay = 1000 / frameRate;
         const frameCount = animationDuration / frameDelay;
-  
+
+        const scrollDistance = scroller.scrollHeight - scroller.clientHeight;
+        
+        scroller.scrollTop = 0; // Reset scroll before starting
+        await new Promise(r => setTimeout(r, 100)); // wait for DOM to update
+
         for (let i = 0; i < frameCount; i++) {
-          await new Promise(resolve => setTimeout(resolve, frameDelay));
-          const canvas = await html2canvas(element, { useCORS: true, backgroundColor: null });
-          gif.addFrame(canvas, { delay: frameDelay });
+            if (scrollDistance > 0) {
+                const progress = i / (frameCount - 1);
+                scroller.scrollTop = progress * scrollDistance;
+            }
+            const canvas = await html2canvas(element, { useCORS: true, backgroundColor: null });
+            gif.addFrame(canvas, { delay: frameDelay });
         }
+        
+        scroller.scrollTop = 0; // Reset scroll after finishing
   
         gif.on('finished', (blob: Blob) => {
           const link = document.createElement('a');
@@ -195,15 +212,12 @@ export const NotificationGenerator: React.FC = () => {
           setLoading(format, false);
         });
         gif.render();
-        setTimeout(() => setIsAnimating(false), animationDuration);
       }
     } catch (error) {
       console.error(`Error downloading as ${format}:`, error);
       alert(`Ocorreu um erro ao baixar o ${format}. Tente novamente.`);
       setLoading(format, false);
-      setIsAnimating(false);
     }
-    if (format === 'png') setLoading(format, false);
   };
   
   const handleOpenInTab = async () => {
@@ -366,12 +380,12 @@ export const NotificationGenerator: React.FC = () => {
       <div className="lg:col-span-2 flex flex-col items-center justify-center gap-4">
         <PhoneSimulator 
           ref={phoneRef}
+          scrollRef={scrollRef}
           phoneModel={phoneModel}
           wallpaperUrl={wallpaper}
           statusBarSettings={statusBar}
           notifications={notifications}
           zoomLevel={zoomLevel}
-          isAnimating={isAnimating}
         />
         <div className="flex items-center flex-wrap justify-center gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-md backdrop-blur-sm">
           <button onClick={() => setZoomLevel(z => z + 0.1)} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><ZoomInIcon/></button>
