@@ -1,279 +1,317 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { GoogleGenAI, Type, Modality } from "@google/genai";
-import * as htmlToImage from 'html-to-image';
+import React, { useState } from 'react';
+import { PhoneSimulator } from './PhoneSimulator';
+import { NotificationPreview } from './NotificationPreview';
 import { PHONE_MODELS } from '../data/phoneModels';
 import { WALLPAPERS } from '../data/wallpapers';
 import { BANKS, TRANSACTION_TYPES } from '../data/options';
-import { PhoneModel, NotificationData, StatusBarSettings, Bank, TransactionType } from '../types';
-import { formatCurrency } from '../utils/formatters';
-import PhoneSimulator from './PhoneSimulator';
+import { NotificationData, StatusBarSettings, Bank } from '../types';
+import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-
-// --- Helper Components ---
-const Fieldset: React.FC<{ legend: string; children: React.ReactNode }> = ({ legend, children }) => (
-  <fieldset className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-4">
-    <legend className="text-sm font-semibold px-2 text-gray-800 dark:text-gray-200">{legend}</legend>
-    {children}
-  </fieldset>
+const SparkleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3L9.5 8.5L4 11L9.5 13.5L12 19L14.5 13.5L20 11L14.5 8.5L12 3Z" /><path d="M5 21L7 16" /><path d="M17 16L19 21" /><path d="M21 5L16 7" /><path d="M7 7L3 5" /></svg>
 );
 
-const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { label: string }>(({ label, id, ...props }, ref) => (
-  <div>
-    <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-    <input ref={ref} id={id} {...props} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors" />
-  </div>
-));
-
-const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string; children: React.ReactNode }> = ({ label, id, children, ...props }) => (
-  <div>
-    <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-    <select id={id} {...props} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md transition-colors">
-      {children}
-    </select>
-  </div>
+const SpinnerIcon = () => (
+    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
 );
 
-const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' }> = ({ children, className, variant = 'primary', ...props }) => {
-  const baseClasses = "flex items-center justify-center gap-2 w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all";
-  const variantClasses = {
-    primary: 'text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500',
-    secondary: 'text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-indigo-500',
-    danger: 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500',
-  };
-  return <button className={`${baseClasses} ${variantClasses[variant]} ${className}`} {...props}>{children}</button>;
+
+const initialNotification: NotificationData = {
+    id: '1',
+    appName: 'Nubank',
+    transactionType: 'Pix - Recebido',
+    amount: 123.45,
+    recipient: 'Maria Silva',
+    timestamp: 'agora',
 };
 
-
 export const NotificationGenerator: React.FC = () => {
-    // --- State ---
-    const [notifications, setNotifications] = useState<NotificationData[]>([]);
-    const [currentNotification, setCurrentNotification] = useState<Omit<NotificationData, 'id'>>({
+    const [notifications, setNotifications] = useState<NotificationData[]>([initialNotification]);
+    const [formData, setFormData] = useState<Omit<NotificationData, 'id' | 'timestamp'> & { timestamp: string }>({
         appName: 'Nubank',
-        transactionType: 'Pix - Recebido',
-        amount: 150.75,
-        recipient: 'Padaria Pão Quente',
-        customAppIcon: null,
+        transactionType: 'Pix - Enviado',
+        amount: 50.00,
+        recipient: 'João Souza',
         timestamp: 'agora',
+        customAppIcon: null,
     });
-    const [statusBar, setStatusBar] = useState<StatusBarSettings>({
+    
+    const [phoneModelId, setPhoneModelId] = useState<string>(PHONE_MODELS[0].id);
+    const [wallpaperUrl, setWallpaperUrl] = useState<string>(WALLPAPERS[0].url);
+    const [statusBarSettings, setStatusBarSettings] = useState<StatusBarSettings>({
         time: '09:41',
         wifi: true,
         signal: 4,
-        battery: 85,
+        battery: 82,
     });
-    const [selectedPhone, setSelectedPhone] = useState<PhoneModel>(PHONE_MODELS[0]);
-    const [wallpaper, setWallpaper] = useState(WALLPAPERS[0].url);
-    const [isZoomed, setIsZoomed] = useState(false);
-    const [loadingStates, setLoadingStates] = useState({ name: false, wallpaper: false });
+    const [isGeneratingRecipient, setIsGeneratingRecipient] = useState(false);
+    const [isGeneratingTimestamp, setIsGeneratingTimestamp] = useState(false);
 
-    const phoneRef = useRef<HTMLDivElement>(null);
-    const amountInputRef = useRef<HTMLInputElement>(null);
-
-    // --- Handlers ---
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        const isNumeric = type === 'number';
-        setCurrentNotification(prev => ({ ...prev, [name]: isNumeric ? parseFloat(value) : value }));
-    };
-
-    const handleStatusBarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
-        setStatusBar(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : type === 'range' ? parseInt(value, 10) : value,
-        }));
-    };
-
-    const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setCurrentNotification(prev => ({ ...prev, customAppIcon: reader.result as string }));
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-    
-    const addNotification = () => {
-        if (!currentNotification.amount || !currentNotification.recipient) {
-            alert("Por favor, preencha o valor e o remetente/loja.");
-            return;
-        }
-        setNotifications(prev => [
-            ...prev,
-            { ...currentNotification, id: new Date().toISOString() + Math.random() },
-        ]);
-    };
-
-    const generateRecipientName = useCallback(async () => {
-        if (!process.env.API_KEY) {
-            alert("API Key não configurada.");
-            return;
-        }
-        setLoadingStates(prev => ({ ...prev, name: true }));
+     // FIX: Removed API key check to align with guidelines assuming it's always available.
+     const handleGenerateRecipient = async () => {
+        setIsGeneratingRecipient(true);
         try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: "Gere um nome completo e realista de uma pessoa brasileira ou o nome de um estabelecimento comercial brasileiro comum (ex: 'Supermercado Confiança', 'Farmácia Bem Estar'). Retorne apenas o nome, sem aspas ou texto adicional.",
+                contents: 'Gere um nome completo realista de uma pessoa ou o nome de uma loja/empresa brasileira. Forneça apenas o nome, sem texto adicional.',
             });
-            setCurrentNotification(prev => ({ ...prev, recipient: response.text.trim() }));
+            const generatedName = response.text.trim().replace(/"/g, '');
+            setFormData(prev => ({ ...prev, recipient: generatedName }));
         } catch (error) {
-            console.error("Error generating recipient name:", error);
-            alert("Falha ao gerar nome com IA.");
+            console.error("Erro ao gerar nome com IA:", error);
+            alert("Falha ao gerar o nome. Tente novamente.");
         } finally {
-            setLoadingStates(prev => ({ ...prev, name: false }));
-        }
-    }, []);
-
-    const handleAmountBlur = () => {
-        if (currentNotification.recipient === '' || currentNotification.recipient === 'Padaria Pão Quente') {
-            generateRecipientName();
+            setIsGeneratingRecipient(false);
         }
     };
     
-    const generateWallpaper = async (prompt: string) => {
-        if (!prompt) {
-             alert("Por favor, descreva o papel de parede.");
-             return;
-        }
-        setLoadingStates(prev => ({...prev, wallpaper: true}));
+    // FIX: Removed API key check to align with guidelines assuming it's always available.
+    const handleGenerateTimestamp = async () => {
+        setIsGeneratingTimestamp(true);
         try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
-                contents: { parts: [{ text: `Um papel de parede abstrato para celular com o tema: ${prompt}. Estilo minimalista, elegante.` }] },
-                config: { responseModalities: [Modality.IMAGE] },
+                model: 'gemini-2.5-flash',
+                contents: "Gere um horário de notificação realista. Pode ser relativo (como 'agora' ou 'há 5 min') ou um horário específico (como '14:23'). Forneça apenas o texto do horário, sem explicações.",
             });
-
-            const firstPart = response.candidates?.[0]?.content?.parts[0];
-            if (firstPart && firstPart.inlineData) {
-                const base64 = firstPart.inlineData.data;
-                const mimeType = firstPart.inlineData.mimeType;
-                setWallpaper(`data:${mimeType};base64,${base64}`);
-            } else {
-                throw new Error("Nenhuma imagem foi gerada.");
-            }
-        } catch(e) {
-            console.error("Erro ao gerar papel de parede", e);
-            alert("Falha ao gerar papel de parede com IA.");
-        } finally {
-            setLoadingStates(prev => ({...prev, wallpaper: false}));
-        }
-    }
-
-    const handleAction = async (action: 'download' | 'new_tab' | 'zoom') => {
-        if (!phoneRef.current) return;
-        try {
-            const dataUrl = await htmlToImage.toPng(phoneRef.current, { quality: 1, pixelRatio: 2 });
-            if (action === 'download') {
-                const link = document.createElement('a');
-                link.download = 'notificacao.png';
-                link.href = dataUrl;
-                link.click();
-            } else if (action === 'new_tab') {
-                const newWindow = window.open();
-                newWindow?.document.write(`<img src="${dataUrl}" alt="Visualização da Notificação" />`);
-            } else {
-                setIsZoomed(true);
-            }
+            const generatedTimestamp = response.text.trim().replace(/"/g, '');
+            setFormData(prev => ({ ...prev, timestamp: generatedTimestamp }));
         } catch (error) {
-            console.error('Oops, something went wrong!', error);
+            console.error("Erro ao gerar horário com IA:", error);
+            alert("Falha ao gerar o horário. Tente novamente.");
+        } finally {
+            setIsGeneratingTimestamp(false);
         }
     };
 
 
-    // --- Render ---
+    const handleFileRead = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handleWallpaperUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            try {
+                const dataUrl = await handleFileRead(file);
+                setWallpaperUrl(dataUrl);
+            } catch (error) {
+                console.error("Erro ao ler o arquivo de papel de parede:", error);
+                alert("Não foi possível carregar o papel de parede.");
+            }
+        }
+    };
+
+    const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            try {
+                const dataUrl = await handleFileRead(file);
+                setFormData(prev => ({ ...prev, customAppIcon: dataUrl }));
+            } catch (error) {
+                console.error("Erro ao ler o arquivo de ícone:", error);
+                alert("Não foi possível carregar o ícone.");
+            }
+        }
+    };
+
+    const handleRemoveIcon = () => {
+        const input = document.getElementById('icon-upload') as HTMLInputElement;
+        if (input) {
+            input.value = '';
+        }
+        setFormData(prev => ({ ...prev, customAppIcon: null }));
+    };
+
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        
+        let processedValue: string | number | boolean = value;
+        if (type === 'number') {
+            processedValue = parseFloat(value) || 0;
+        }
+        
+        if (name === 'appName') {
+            handleRemoveIcon();
+            setFormData(prev => ({ ...prev, [name]: processedValue as Bank, customAppIcon: null }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: processedValue }));
+        }
+    };
+
+    const handleAddNotification = (e: React.FormEvent) => {
+        e.preventDefault();
+        const newNotification: NotificationData = {
+            ...formData,
+            id: new Date().getTime().toString(),
+        };
+        setNotifications(prev => [newNotification, ...prev]);
+    };
+    
+    const handleDeleteNotification = (id: string) => {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+    };
+
+    const selectedPhoneModel = PHONE_MODELS.find(m => m.id === phoneModelId) || PHONE_MODELS[0];
+
     return (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-            {/* --- Form Panel --- */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Personalizar Notificação</h2>
-                
-                <Fieldset legend="Conteúdo da Notificação">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Select id="appName" name="appName" label="Nome do Banco/App" value={currentNotification.appName} onChange={handleInputChange}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2 space-y-6">
+                <form onSubmit={handleAddNotification} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-4">
+                    <h2 className="text-xl font-bold mb-4">Criar Notificação</h2>
+                    
+                    <div>
+                        <label htmlFor="appName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Banco/App</label>
+                        <select id="appName" name="appName" value={formData.appName} onChange={handleFormChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                             {BANKS.map(bank => <option key={bank} value={bank}>{bank}</option>)}
-                        </Select>
-                        <Select id="transactionType" name="transactionType" label="Tipo de Transação" value={currentNotification.transactionType} onChange={handleInputChange}>
-                            {TRANSACTION_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
-                        </Select>
+                        </select>
                     </div>
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-                        <Input ref={amountInputRef} label="Valor (R$)" id="amount" name="amount" type="number" step="0.01" value={currentNotification.amount} onChange={handleInputChange} onBlur={handleAmountBlur} />
-                        <div className="relative">
-                             <Input label="Remetente / Loja" id="recipient" name="recipient" value={currentNotification.recipient} onChange={handleInputChange} />
-                             <button onClick={generateRecipientName} disabled={loadingStates.name} className="absolute right-2 bottom-1.5 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500" title="Gerar nome com IA">
-                                {loadingStates.name ? <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3c-1.8 0-3.6.6-5 1.7-1.4 1.1-2.5 2.6-3.2 4.3-.7 1.7-1 3.5-1 5.3 0 3.6 1.2 7 3.5 9.5s5.9 3.5 9.5 3.5c1.8 0 3.6-.3 5.3-1 1.7-.7 3.2-1.8 4.3-3.2 2.5-3.5 2.5-7.9 0-11.4C21.9 5.4 19.3 3 15.7 3Z"/><path d="M12 9v6"/><path d="M9 12h6"/></svg>}
+                     <div>
+                        <label htmlFor="icon-upload" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Ícone Personalizado (Opcional)</label>
+                        <div className="mt-1 flex items-center gap-4">
+                            <label htmlFor="icon-upload" className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <span>Importar Ícone</span>
+                            </label>
+                            <input id="icon-upload" name="icon-upload" type="file" className="hidden" accept="image/*" onChange={handleIconUpload} />
+                            {formData.customAppIcon && (
+                                <div className="flex items-center gap-2">
+                                    <img src={formData.customAppIcon} alt="Ícone" className="w-8 h-8 rounded-md object-cover" />
+                                    <button type="button" onClick={handleRemoveIcon} className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                        Remover
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="transactionType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Transação</label>
+                        <select id="transactionType" name="transactionType" value={formData.transactionType} onChange={handleFormChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            {TRANSACTION_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor</label>
+                        <input type="number" id="amount" name="amount" value={formData.amount} onChange={handleFormChange} step="0.01" className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label htmlFor="recipient" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Destinatário/Origem</label>
+                         <div className="mt-1 flex rounded-md shadow-sm">
+                            <input 
+                                type="text" 
+                                id="recipient" 
+                                name="recipient" 
+                                value={formData.recipient} 
+                                onChange={handleFormChange} 
+                                className="block w-full flex-1 rounded-none rounded-l-md sm:text-sm border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500" 
+                                disabled={isGeneratingRecipient}
+                                placeholder={isGeneratingRecipient ? 'Gerando...' : ''}
+                            />
+                            <button 
+                                type="button" 
+                                onClick={handleGenerateRecipient}
+                                disabled={isGeneratingRecipient}
+                                className="relative inline-flex items-center justify-center w-12 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                aria-label="Gerar nome com IA"
+                            >
+                                {isGeneratingRecipient ? <SpinnerIcon /> : <SparkleIcon />}
                             </button>
                         </div>
                     </div>
-                     <Input label="Timestamp (ex: agora, há 5m)" id="timestamp" name="timestamp" value={currentNotification.timestamp} onChange={handleInputChange} />
-                </Fieldset>
-
-                <Fieldset legend="Aparência do Celular">
-                     <Select id="phoneModel" name="phoneModel" label="Modelo do Celular" value={selectedPhone.id} onChange={(e) => setSelectedPhone(PHONE_MODELS.find(p => p.id === e.target.value)!)}>
-                        {PHONE_MODELS.map(model => <option key={model.id} value={model.id}>{model.name}</option>)}
-                    </Select>
-                    <Select id="wallpaper" name="wallpaper" label="Papel de Parede" value={wallpaper} onChange={(e) => setWallpaper(e.target.value)}>
-                        {WALLPAPERS.map(wp => <option key={wp.name} value={wp.url}>{wp.name}</option>)}
-                    </Select>
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gerar Papel de Parede com IA</label>
-                        <div className="flex gap-2">
-                            <input id="wallpaper-prompt" placeholder="Ex: ondas azuis e douradas" className="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                            <Button type="button" onClick={() => generateWallpaper((document.getElementById('wallpaper-prompt') as HTMLInputElement).value)} disabled={loadingStates.wallpaper}>
-                                {loadingStates.wallpaper ? 'Gerando...' : 'Gerar'}
-                            </Button>
+                    <div>
+                        <label htmlFor="timestamp" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Horário</label>
+                        <div className="mt-1 flex rounded-md shadow-sm">
+                            <input 
+                                type="text" 
+                                id="timestamp" 
+                                name="timestamp" 
+                                value={formData.timestamp} 
+                                onChange={handleFormChange} 
+                                className="block w-full flex-1 rounded-none rounded-l-md sm:text-sm border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500" 
+                                disabled={isGeneratingTimestamp}
+                                placeholder={isGeneratingTimestamp ? 'Gerando...' : ''}
+                            />
+                            <button 
+                                type="button" 
+                                onClick={handleGenerateTimestamp}
+                                disabled={isGeneratingTimestamp}
+                                className="relative inline-flex items-center justify-center w-12 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                aria-label="Gerar horário com IA"
+                            >
+                                {isGeneratingTimestamp ? <SpinnerIcon /> : <SparkleIcon />}
+                            </button>
                         </div>
                     </div>
-                </Fieldset>
-                
-                <Fieldset legend="Barra de Status">
+                    <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md">Adicionar Notificação</button>
+                </form>
+
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-4">
+                     <h2 className="text-xl font-bold mb-4">Personalizar Celular</h2>
+                     <div>
+                        <label htmlFor="phoneModel" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Modelo de Celular</label>
+                        <select id="phoneModel" name="phoneModel" value={phoneModelId} onChange={(e) => setPhoneModelId(e.target.value)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            {PHONE_MODELS.map(model => <option key={model.id} value={model.id}>{model.name}</option>)}
+                        </select>
+                    </div>
+                     <div>
+                        <label htmlFor="wallpaper" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Papel de Parede</label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <select id="wallpaper" name="wallpaper" value={wallpaperUrl} onChange={(e) => setWallpaperUrl(e.target.value)} className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                {WALLPAPERS.map(wp => <option key={wp.url} value={wp.url}>{wp.name}</option>)}
+                            </select>
+                            <label htmlFor="wallpaper-upload" className="cursor-pointer whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                                Importar
+                            </label>
+                            <input id="wallpaper-upload" type="file" className="hidden" accept="image/*" onChange={handleWallpaperUpload} />
+                        </div>
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <Input label="Horário" id="time" name="time" type="text" value={statusBar.time} onChange={handleStatusBarChange} />
-                         <div className="flex items-center justify-center pt-5">
-                            <input id="wifi" name="wifi" type="checkbox" checked={statusBar.wifi} onChange={handleStatusBarChange} className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-                            <label htmlFor="wifi" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">Wi-Fi Visível</label>
+                        <div>
+                             <label htmlFor="time" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Hora</label>
+                             <input type="text" id="time" value={statusBarSettings.time} onChange={(e) => setStatusBarSettings(s => ({...s, time: e.target.value}))} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600" />
+                        </div>
+                        <div>
+                             <label htmlFor="battery" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bateria (%)</label>
+                             <input type="number" id="battery" value={statusBarSettings.battery} max="100" min="0" onChange={(e) => setStatusBarSettings(s => ({...s, battery: parseInt(e.target.value, 10)}))} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600" />
+                        </div>
+                        <div>
+                            <label htmlFor="signal" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Sinal (0-4)</label>
+                            <input type="number" id="signal" value={statusBarSettings.signal} max="4" min="0" onChange={(e) => setStatusBarSettings(s => ({...s, signal: parseInt(e.target.value, 10)}))} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600" />
+                        </div>
+                        <div className="flex items-center pt-6">
+                            <input id="wifi" type="checkbox" checked={statusBarSettings.wifi} onChange={(e) => setStatusBarSettings(s => ({...s, wifi: e.target.checked}))} className="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+                            <label htmlFor="wifi" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">Wi-Fi Ativo</label>
                         </div>
                     </div>
-                     <div>
-                        <label htmlFor="signal" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Sinal de Celular ({statusBar.signal}/4)</label>
-                        <input id="signal" name="signal" type="range" min="0" max="4" step="1" value={statusBar.signal} onChange={handleStatusBarChange} className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer" />
-                    </div>
-                     <div>
-                        <label htmlFor="battery" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nível da Bateria ({statusBar.battery}%)</label>
-                        <input id="battery" name="battery" type="range" min="0" max="100" step="1" value={statusBar.battery} onChange={handleStatusBarChange} className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer" />
-                    </div>
-                </Fieldset>
-                
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Button type="button" onClick={addNotification} variant="primary">Adicionar Notificação</Button>
-                    <Button type="button" onClick={() => setNotifications([])} variant="danger">Limpar Notificações</Button>
-                </div>
-
-            </div>
-
-            {/* --- Preview Panel --- */}
-            <div className="space-y-4 lg:sticky lg:top-8">
-                <div className="flex items-center justify-center gap-2">
-                     <button onClick={() => handleAction('download')} title="Baixar Imagem" className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-                     <button onClick={() => handleAction('zoom')} title="Zoom" className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
-                     <button onClick={() => handleAction('new_tab')} title="Abrir em Nova Aba" className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
-                </div>
-                <div className="flex justify-center items-center h-full">
-                    <PhoneSimulator ref={phoneRef} phoneModel={selectedPhone} wallpaperUrl={wallpaper} statusBarSettings={statusBar} notifications={notifications.length > 0 ? notifications : [{ ...currentNotification, id: 'preview-0' }]} />
                 </div>
             </div>
 
-            {/* Zoom Modal */}
-            {isZoomed && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setIsZoomed(false)}>
-                    <div className="max-w-full max-h-full" onClick={(e) => e.stopPropagation()}>
-                        <img src={phoneRef.current && htmlToImage.toPng(phoneRef.current, { pixelRatio: 2 }).then(url => (document.querySelector('#zoom-img') as HTMLImageElement).src = url)} id="zoom-img" alt="Visualização Ampliada" className="max-w-[90vw] max-h-[90vh] object-contain"/>
-                    </div>
+            <div className="md:col-span-1">
+                <div className="sticky top-8">
+                    <PhoneSimulator
+                        model={selectedPhoneModel}
+                        wallpaperUrl={wallpaperUrl}
+                        statusBarSettings={statusBarSettings}
+                    >
+                        {notifications.map(notification => (
+                          <div key={notification.id} className="relative group w-full mb-2 last:mb-0">
+                            <NotificationPreview notification={notification} />
+                             <button onClick={() => handleDeleteNotification(notification.id)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              &times;
+                            </button>
+                          </div>
+                        ))}
+                    </PhoneSimulator>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

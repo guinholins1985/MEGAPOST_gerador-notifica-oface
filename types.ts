@@ -23,7 +23,7 @@ export type Bank =
   | 'Nubank' | 'Inter' | 'C6 Bank' | 'PicPay' | 'Mercado Pago' | 'PagBank' 
   | 'Itaú' | 'Bradesco' | 'Santander' | 'Caixa' | 'Banco do Brasil' | 'Sicoob'
   | 'Sicredi' | 'Original' | 'Neon' | 'Next' | 'Will Bank' | 'BTG Pactual'
-  | 'XP Investimentos' | 'Ágora' | 'Genial' | 'ModalMais';
+  | 'XP Investimentos' | 'Ágora' | 'Genial' | 'ModalMais' | 'Kiwify' | 'Hotmart';
 
 export type TransactionType =
   | 'Pix - Enviado'

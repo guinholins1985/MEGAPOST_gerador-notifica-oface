@@ -7,6 +7,8 @@ export const BANKS: Bank[] = [
     'PicPay',
     'Mercado Pago',
     'PagBank',
+    'Kiwify',
+    'Hotmart',
     'Itaú',
     'Bradesco',
     'Santander',
