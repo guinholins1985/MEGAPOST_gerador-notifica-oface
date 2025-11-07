@@ -45,23 +45,23 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 font-sans transition-colors duration-300">
       <div className="absolute inset-0 z-0 opacity-50 dark:opacity-20" style={{backgroundImage: `radial-gradient(#d1d5db 1px, transparent 1px)`, backgroundSize: `16px 16px`}}></div>
       <div className="relative z-10">
-        <header className="p-4 sm:p-6 flex justify-between items-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-lg border-b border-neutral-200 dark:border-neutral-800 sticky top-0">
-          <div>
-              <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Gerador de Notificações</h1>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                  Crie e personalize alertas de transações com um design profissional.
-              </p>
-          </div>
-          <button
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900 focus:ring-primary-500 transition-colors"
-            aria-label="Toggle dark mode"
-          >
-            {isDarkMode ? <SunIcon /> : <MoonIcon />}
-          </button>
+        <header className="py-6 text-center border-b border-neutral-200 dark:border-neutral-800 relative">
+            <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Gerador de Notificações</h1>
+            <p className="text-md text-neutral-600 dark:text-neutral-400 mt-2">
+                Crie e personalize alertas de transações com um design profissional.
+            </p>
+            <button
+              onClick={toggleDarkMode}
+              className="absolute top-1/2 -translate-y-1/2 right-6 p-2 rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900 focus:ring-primary-500 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? <SunIcon /> : <MoonIcon />}
+            </button>
         </header>
         <main className="p-4 sm:p-6 md:p-8">
-          <NotificationGenerator />
+          <div className="max-w-7xl mx-auto">
+            <NotificationGenerator />
+          </div>
         </main>
       </div>
     </div>
