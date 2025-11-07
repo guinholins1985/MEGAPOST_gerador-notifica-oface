@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NotificationGenerator } from './components/NotificationGenerator';
 
 const SunIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+  <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
     <circle cx="12" cy="12" r="5"></circle>
     <line x1="12" y1="1" x2="12" y2="3"></line>
     <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -42,27 +42,27 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 font-sans transition-colors duration-300">
-      <div className="absolute inset-0 z-0 opacity-50 dark:opacity-20" style={{backgroundImage: `radial-gradient(#d1d5db 1px, transparent 1px)`, backgroundSize: `16px 16px`}}></div>
-      <div className="relative z-10">
-        <header className="py-6 text-center border-b border-neutral-200 dark:border-neutral-800 relative">
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Gerador de Notificações</h1>
-            <p className="text-md text-neutral-600 dark:text-neutral-400 mt-2">
-                Crie e personalize alertas de transações com um design profissional.
-            </p>
-            <button
-              onClick={toggleDarkMode}
-              className="absolute top-1/2 -translate-y-1/2 right-6 p-2 rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900 focus:ring-primary-500 transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {isDarkMode ? <SunIcon /> : <MoonIcon />}
-            </button>
-        </header>
-        <main className="p-4 sm:p-6 md:p-8">
-          <div className="max-w-7xl mx-auto">
-            <NotificationGenerator />
-          </div>
-        </main>
+    <div className="min-h-screen font-sans transition-colors duration-300">
+      <div className="absolute inset-0 z-0 opacity-20" style={{backgroundImage: `radial-gradient(#cbd5e1 1px, transparent 1px)`, backgroundSize: `16px 16px`}}></div>
+      <div className="relative z-10 flex flex-col items-center justify-start min-h-screen p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-7xl bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl shadow-black/20 border border-white/10">
+            <header className="py-6 text-center relative">
+                <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Gerador de Notificações</h1>
+                <p className="text-md text-neutral-600 dark:text-neutral-400 mt-2">
+                    Crie e personalize alertas de transações com um design profissional.
+                </p>
+                <button
+                  onClick={toggleDarkMode}
+                  className="absolute top-1/2 -translate-y-1/2 right-6 p-2 rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-neutral-900 focus:ring-primary-500 transition-colors"
+                  aria-label="Toggle dark mode"
+                >
+                  {isDarkMode ? <SunIcon /> : <MoonIcon />}
+                </button>
+            </header>
+            <main className="p-4 sm:p-6 md:p-8 pt-0">
+              <NotificationGenerator />
+            </main>
+        </div>
       </div>
     </div>
   );
