@@ -17,6 +17,7 @@ export interface StatusBarSettings {
   wifi: boolean;
   signal: number;
   battery: number;
+  color: 'white' | 'black';
 }
 
 export type Bank = 

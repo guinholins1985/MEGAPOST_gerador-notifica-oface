@@ -51,7 +51,7 @@ export const NotificationGenerator: React.FC = () => {
   const [processedWallpaperUrl, setProcessedWallpaperUrl] = useState<string>(wallpaper);
   const [wallpaperError, setWallpaperError] = useState(false);
 
-  const [statusBar, setStatusBar] = useState<StatusBarSettings>({ time: '09:41', wifi: true, signal: 4, battery: 88 });
+  const [statusBar, setStatusBar] = useState<StatusBarSettings>({ time: '09:41', wifi: true, signal: 4, battery: 88, color: 'white' });
   const [zoomLevel, setZoomLevel] = useState(1);
   const [wallpaperPrompt, setWallpaperPrompt] = useState('A beautiful abstract wallpaper');
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
@@ -364,6 +364,19 @@ export const NotificationGenerator: React.FC = () => {
                   <input id="wifi" type="checkbox" checked={statusBar.wifi} onChange={(e) => handleStatusBarChange('wifi', e.target.checked)} className="h-4 w-4 text-primary-600 border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 rounded focus:ring-primary-500" />
                   <label htmlFor="wifi" className="ml-2 block text-sm text-neutral-900 dark:text-neutral-200">WiFi Ativado</label>
               </div>
+               <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">Cor dos Ícones</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="radio" name="statusBarColor" value="white" checked={statusBar.color === 'white'} onChange={(e) => handleStatusBarChange('color', e.target.value)} className="form-radio"/>
+                    Branco
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="radio" name="statusBarColor" value="black" checked={statusBar.color === 'black'} onChange={(e) => handleStatusBarChange('color', e.target.value)} className="form-radio"/>
+                    Preto
+                  </label>
+                </div>
+              </div>
           </div>
         </Accordion>
       </div>
@@ -398,6 +411,9 @@ export const NotificationGenerator: React.FC = () => {
        <style>{`
         .form-select, .form-input {
           @apply block w-full pl-3 pr-10 py-2.5 text-base border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:text-sm rounded-lg transition-colors;
+        }
+        .form-radio {
+          @apply h-4 w-4 text-primary-600 border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 focus:ring-primary-500;
         }
         .form-button-icon {
           @apply flex-shrink-0 cursor-pointer p-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 transition-colors;
