@@ -6,7 +6,7 @@ const NotificationPreview: React.FC<{ data: NotificationData }> = ({ data }) => 
     
     return (
         <div className="p-2 w-full mt-10">
-            <div className="bg-white/80 dark:bg-black/60 backdrop-blur-xl rounded-2xl p-3 shadow-lg flex items-start space-x-3 border border-black/10 dark:border-white/10">
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-3 shadow-lg flex items-start space-x-3 border border-black/10">
                 <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
                   {bankDetails.icon.startsWith('data:') || bankDetails.icon.startsWith('http') ? (
                      <img 
@@ -15,17 +15,17 @@ const NotificationPreview: React.FC<{ data: NotificationData }> = ({ data }) => 
                         className="w-full h-full object-contain bg-white p-0.5" 
                       />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-white font-bold text-xl">
+                    <div className="w-full h-full flex items-center justify-center bg-neutral-200 text-neutral-800 font-bold text-xl">
                       {bankDetails.icon}
                     </div>
                   )}
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <div className="flex justify-between items-center">
-                        <h3 className={`font-semibold text-sm truncate text-neutral-900 dark:text-white`}>{bankDetails.name}</h3>
-                        <span className="text-xs text-neutral-600 dark:text-neutral-300 flex-shrink-0 ml-2">{data.time}</span>
+                        <h3 className={`font-semibold text-base truncate text-neutral-900`}>{bankDetails.name}</h3>
+                        <span className="text-sm text-neutral-600 flex-shrink-0 ml-2">{data.time}</span>
                     </div>
-                    <p className="text-sm text-neutral-800 dark:text-neutral-100 mt-1">
+                    <p className="text-base text-neutral-800 mt-1">
                         {getMessage(data)}
                     </p>
                 </div>

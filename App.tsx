@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 import Header from './components/Header';
 import NotificationGenerator from './components/NotificationGenerator';
 import { NotificationData, Preset } from './types';
-import { wallpapers } from './data/wallpapers';
 import { phoneModels } from './data/phoneModels';
 
 const initialNotificationData: NotificationData = {
@@ -15,7 +14,7 @@ const initialNotificationData: NotificationData = {
   value: 'R$ 1.234,56',
   recipient: 'Tony Stark',
   time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-  wallpaper: wallpapers[0].url,
+  wallpaper: '',
   phoneModel: phoneModels[0].name,
   statusBar: {
     time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -27,7 +26,7 @@ const initialNotificationData: NotificationData = {
 };
 
 function App() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [notifications, setNotifications] = useState<NotificationData[]>([initialNotificationData]);
   const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(initialNotificationData.id);
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -51,7 +50,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans antialiased text-neutral-800 dark:text-neutral-100">
+    <div className="min-h-screen flex flex-col font-sans antialiased text-neutral-800">
       <Header theme={theme} toggleTheme={toggleTheme} />
       <NotificationGenerator
         notifications={notifications}

@@ -29,7 +29,7 @@ const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({ data, children, mousePo
     };
     
     const shadowStyle: React.CSSProperties = {
-      boxShadow: `${(mousePosition.x / (model.width) - 20)}px ${(mousePosition.y / (model.height) - 20)}px 40px rgba(0,0,0,0.25)`,
+      boxShadow: `${(mousePosition.x / (model.width) - 20)}px ${(mousePosition.y / (model.height) - 20)}px 40px rgba(0,0,0,0.15)`,
        transition: 'box-shadow 0.1s ease-out',
     }
 
@@ -37,11 +37,11 @@ const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({ data, children, mousePo
         <div id="phone-simulator-for-download" className="relative transform scale-90 md:scale-100 origin-top" style={tiltStyle}>
             <div style={{...phoneStyle, ...shadowStyle}} className="bg-black transition-all duration-300 ease-in-out mx-auto">
                 <div 
-                    className="relative w-full h-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden" 
+                    className="relative w-full h-full bg-neutral-200 overflow-hidden" 
                     style={{ borderRadius: `${model.bezel + 10}px` }}
                 >
-                    <img src={data.wallpaper} alt="wallpaper" className="absolute top-0 left-0 w-full h-full object-cover" crossOrigin="anonymous" />
-                    <div className="absolute top-0 left-0 w-full h-full bg-black/10 dark:bg-black/20"></div>
+                    {data.wallpaper && <img src={data.wallpaper} alt="wallpaper" className="absolute top-0 left-0 w-full h-full object-cover" crossOrigin="anonymous" />}
+                    <div className="absolute top-0 left-0 w-full h-full bg-black/10"></div>
                     <StatusBar settings={data.statusBar} />
                     {model.notch && (
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-xl z-20"></div>
