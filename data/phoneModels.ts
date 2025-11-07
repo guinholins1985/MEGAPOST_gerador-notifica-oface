@@ -1,5 +1,4 @@
 // data/phoneModels.ts
-// FIX: Corrected import path to be relative.
 import { PhoneModel } from '../types';
 
 export const PHONE_MODELS: PhoneModel[] = [

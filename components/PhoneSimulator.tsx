@@ -1,41 +1,69 @@
 import React from 'react';
-import { PhoneModel, StatusBarSettings } from '../types';
+import { PhoneModel, StatusBarSettings, NotificationData, CSSProperties } from '../types';
 import StatusBar from './StatusBar';
+import { NotificationPreview } from './NotificationPreview';
 
 interface PhoneSimulatorProps {
-  model: PhoneModel;
+  phoneModel: PhoneModel;
   wallpaperUrl: string;
   statusBarSettings: StatusBarSettings;
-  children: React.ReactNode;
+  notification: NotificationData;
 }
 
-export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({ model, wallpaperUrl, statusBarSettings, children }) => {
+export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
+  phoneModel,
+  wallpaperUrl,
+  statusBarSettings,
+  notification,
+}) => {
+  const frameStyle: CSSProperties = {
+    ...phoneModel.styles.frame,
+    position: 'relative',
+    backgroundColor: '#111',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    border: '8px solid #111',
+    overflow: 'hidden',
+  };
+
+  const screenStyle: CSSProperties = {
+    ...phoneModel.styles.screen,
+    height: '100%',
+    width: '100%',
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: '#000',
+  };
+
+  const wallpaperStyle: CSSProperties = {
+    backgroundImage: `url(${wallpaperUrl})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    height: '100%',
+    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  };
+  
+  const notchStyle: CSSProperties = {
+    ...phoneModel.styles.notch,
+    position: 'absolute',
+    top: 0,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: '#111',
+    borderRadius: '0 0 1rem 1rem',
+    zIndex: 10,
+  }
+
   return (
-    <div 
-      className="relative bg-gray-800 p-2 shadow-2xl mx-auto"
-      style={model.styles.frame}
-    >
-      <div 
-        className="relative h-full w-full bg-black overflow-hidden"
-        style={model.styles.screen}
-      >
-        <img 
-          src={wallpaperUrl} 
-          alt="Phone wallpaper" 
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        
+    <div style={frameStyle}>
+      <div style={screenStyle}>
+        <div style={wallpaperStyle}></div>
         <StatusBar settings={statusBarSettings} />
-
-        {model.styles.notch && (
-          <div 
-            className="absolute top-0 left-1/2 -translate-x-1/2 bg-black rounded-b-xl z-30"
-            style={model.styles.notch}
-          ></div>
-        )}
-
-        <div className="absolute inset-0 pt-10 px-2 flex flex-col items-center gap-2 overflow-y-auto">
-            {children}
+        {phoneModel.styles.notch && <div style={notchStyle}></div>}
+        <div className="absolute inset-0 flex items-center justify-center p-4">
+          <NotificationPreview notification={notification} />
         </div>
       </div>
     </div>

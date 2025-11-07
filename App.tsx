@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Changed import to be a relative path.
 import { NotificationGenerator } from './components/NotificationGenerator';
 
 const SunIcon = () => (
