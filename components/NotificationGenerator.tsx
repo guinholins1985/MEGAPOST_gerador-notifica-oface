@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleGenAI, Modality, Type } from '@google/genai';
 import { Bank, NotificationData, PhoneModel, StatusBarSettings, TransactionType } from '../types';
 import { PHONE_MODELS } from '../data/phoneModels';
@@ -13,18 +13,22 @@ declare const GIF: any;
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const INITIAL_NOTIFICATION: NotificationData = {
-  id: 'preview-notification',
+const createNewNotification = (data: Partial<NotificationData> = {}): NotificationData => ({
+  id: crypto.randomUUID(),
   appName: 'Nubank',
   transactionType: 'Pix - Recebido',
   amount: 123.45,
   recipient: 'Tony Stark',
   customAppIcon: null,
   timestamp: 'agora',
-};
+  ...data,
+});
+
 
 export const NotificationGenerator: React.FC = () => {
-  const [notification, setNotification] = useState<NotificationData>(INITIAL_NOTIFICATION);
+  const [notifications, setNotifications] = useState<NotificationData[]>([createNewNotification()]);
+  const [selectedId, setSelectedId] = useState<string>(notifications[0].id);
+  
   const [phoneModel, setPhoneModel] = useState<PhoneModel>(PHONE_MODELS[0]);
   const [wallpaper, setWallpaper] = useState<string>(WALLPAPERS[0].url);
   const [statusBar, setStatusBar] = useState<StatusBarSettings>({
@@ -36,9 +40,40 @@ export const NotificationGenerator: React.FC = () => {
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
   
   const phoneRef = useRef<HTMLDivElement>(null);
+  
+  const selectedNotification = notifications.find(n => n.id === selectedId) || null;
 
   const setLoading = (key: string, value: boolean) => {
     setIsLoading(prev => ({ ...prev, [key]: value }));
+  };
+  
+  const handleAddNotification = () => {
+    if (!selectedNotification) return;
+
+    const newNotif: NotificationData = {
+        ...selectedNotification,
+        id: crypto.randomUUID(),
+        amount: Math.round((Math.random() * 500) * 100) / 100,
+        recipient: "Novo Destinatário",
+        timestamp: 'agora',
+    };
+
+    setNotifications(prev => [...prev, newNotif]);
+    setSelectedId(newNotif.id);
+  };
+
+  const handleDeleteNotification = (idToDelete: string) => {
+    const newNotifications = notifications.filter(n => n.id !== idToDelete);
+    if (newNotifications.length === 0) {
+      const newNotif = createNewNotification();
+      setNotifications([newNotif]);
+      setSelectedId(newNotif.id);
+    } else {
+      setNotifications(newNotifications);
+      if (selectedId === idToDelete) {
+        setSelectedId(newNotifications[0].id);
+      }
+    }
   };
 
   const handleGenerateWithAI = async (field: 'recipient' | 'timestamp' | 'all') => {
@@ -47,7 +82,7 @@ export const NotificationGenerator: React.FC = () => {
       if (field === 'all') {
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash',
-          contents: `Gere os detalhes para uma notificação de transação financeira falsa. Preciso do tipo de transação, valor, e nome do destinatário/remetente. O nome deve ser de uma pessoa famosa. O valor deve ser um número entre 1 e 5000.`,
+          contents: `Gere os detalhes para uma notificação de transação financeira falsa. Preciso do tipo de transação, valor, e nome do destinatário/remetente. O nome deve ser de uma pessoa famosa ou personagem. O valor deve ser um número entre 1 e 5000.`,
           config: {
             responseMimeType: "application/json",
             responseSchema: {
@@ -62,11 +97,22 @@ export const NotificationGenerator: React.FC = () => {
           }
         });
         const data = JSON.parse(response.text);
-        setNotification(prev => ({ ...prev, ...data }));
+        if (!selectedNotification) return;
+
+        const newNotif: NotificationData = {
+          ...selectedNotification, 
+          id: crypto.randomUUID(),
+          ...data,
+          timestamp: 'agora'
+        };
+
+        setNotifications(prev => [...prev, newNotif]);
+        setSelectedId(newNotif.id);
+
       } else {
         const prompt = field === 'recipient'
           ? "Gere um nome completo de uma pessoa, real ou fictícia. Retorne apenas o nome."
-          : "Gere um texto de carimbo de data/hora relativo para uma notificação, como 'agora', 'há 2 minutos', 'há 1 hora'. Retorne apenas o texto.";
+          : "Gere um texto de carimbo de data/hora para uma notificação. Retorne APENAS o texto. Exemplos de formatos aceitáveis: 'agora', 'há 5 minutos', '15:30', 'ontem às 21:00', 'agora mesmo'. Varie entre esses formatos.";
         const response = await ai.models.generateContent({model: 'gemini-2.5-flash', contents: prompt });
         handleNotificationChange(field, response.text.trim());
       }
@@ -131,7 +177,7 @@ export const NotificationGenerator: React.FC = () => {
       } else if (format === 'gif') {
         setIsAnimating(true);
         const gif = new GIF({ workers: 2, quality: 10, workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js' });
-        const animationDuration = 3000; // ms
+        const animationDuration = 4000; // ms
         const frameRate = 15;
         const frameDelay = 1000 / frameRate;
         const frameCount = animationDuration / frameDelay;
@@ -168,28 +214,43 @@ export const NotificationGenerator: React.FC = () => {
     newWindow?.document.write(`<img src="${dataUrl}" alt="Notificação Gerada" style="max-width: 100%; height: auto;"/>`);
   };
 
-  const handleNotificationChange = (field: keyof NotificationData, value: any) => setNotification(prev => ({ ...prev, [field]: value }));
+  const handleNotificationChange = (field: keyof Omit<NotificationData, 'id'>, value: any) => {
+    setNotifications(currentNotifications => 
+        currentNotifications.map(n => 
+            n.id === selectedId ? { ...n, [field]: value } : n
+        )
+    );
+  };
+
   const handleStatusBarChange = (field: keyof StatusBarSettings, value: any) => setStatusBar(prev => ({ ...prev, [field]: value }));
   const handlePhoneModelChange = (id: string) => {
     const newModel = PHONE_MODELS.find(m => m.id === id);
     if (newModel) setPhoneModel(newModel);
   };
 
+  if (!selectedNotification) {
+      return (
+        <div className="flex items-center justify-center h-full text-center">
+            <p>Nenhuma notificação selecionada. Adicione uma para começar.</p>
+        </div>
+      );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-1 space-y-6">
         <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Notificação</h2>
+            <h2 className="text-xl font-bold">Notificação (Editando)</h2>
             <button onClick={() => handleGenerateWithAI('all')} disabled={isLoading.all} className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
-              {isLoading.all ? <SpinnerIcon /> : <MagicWandIcon />} Gerar com IA
+              {isLoading.all ? <SpinnerIcon /> : <MagicWandIcon />} Adicionar com IA
             </button>
           </div>
           <div className="space-y-4">
             <div>
               <label htmlFor="appName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Aplicativo</label>
               <div className="flex items-center gap-2 mt-1">
-                <select id="appName" value={notification.appName} onChange={(e) => handleNotificationChange('appName', e.target.value as Bank)} className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                <select id="appName" value={selectedNotification.appName} onChange={(e) => handleNotificationChange('appName', e.target.value as Bank)} className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                   {BANKS.map(bank => <option key={bank} value={bank}>{bank}</option>)}
                 </select>
                 <label htmlFor="customAppIcon" className="cursor-pointer p-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -199,18 +260,18 @@ export const NotificationGenerator: React.FC = () => {
             </div>
             <div>
               <label htmlFor="transactionType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Transação</label>
-              <select id="transactionType" value={notification.transactionType} onChange={(e) => handleNotificationChange('transactionType', e.target.value as TransactionType)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+              <select id="transactionType" value={selectedNotification.transactionType} onChange={(e) => handleNotificationChange('transactionType', e.target.value as TransactionType)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                 {TRANSACTION_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
             </div>
             <div>
               <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor</label>
-              <input type="number" id="amount" value={notification.amount} onChange={(e) => handleNotificationChange('amount', parseFloat(e.target.value) || 0)} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md" />
+              <input type="number" id="amount" value={selectedNotification.amount} onChange={(e) => handleNotificationChange('amount', parseFloat(e.target.value) || 0)} className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md" />
             </div>
             <div>
               <label htmlFor="recipient" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Destinatário/Remetente</label>
               <div className="flex items-center gap-2 mt-1">
-                <input type="text" id="recipient" value={notification.recipient} onChange={(e) => handleNotificationChange('recipient', e.target.value)} className="block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md" />
+                <input type="text" id="recipient" value={selectedNotification.recipient} onChange={(e) => handleNotificationChange('recipient', e.target.value)} className="block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md" />
                 <button onClick={() => handleGenerateWithAI('recipient')} disabled={isLoading.recipient} className="p-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50">
                    {isLoading.recipient ? <SpinnerIcon /> : <MagicWandIcon />}
                 </button>
@@ -219,13 +280,33 @@ export const NotificationGenerator: React.FC = () => {
             <div>
               <label htmlFor="timestamp" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Horário</label>
               <div className="flex items-center gap-2 mt-1">
-                <input type="text" id="timestamp" value={notification.timestamp} onChange={(e) => handleNotificationChange('timestamp', e.target.value)} className="block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md" />
+                <input type="text" id="timestamp" value={selectedNotification.timestamp} onChange={(e) => handleNotificationChange('timestamp', e.target.value)} className="block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-md" />
                 <button onClick={() => handleGenerateWithAI('timestamp')} disabled={isLoading.timestamp} className="p-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50">
                   {isLoading.timestamp ? <SpinnerIcon /> : <MagicWandIcon />}
                 </button>
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Fila de Notificações</h2>
+                <button onClick={handleAddNotification} className="px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">+ Adicionar Nova</button>
+            </div>
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                {notifications.map(notif => (
+                    <div key={notif.id} onClick={() => setSelectedId(notif.id)} className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${selectedId === notif.id ? 'bg-indigo-100 dark:bg-indigo-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`}>
+                        <div className="flex flex-col text-sm">
+                            <span className="font-semibold">{notif.appName}</span>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{notif.recipient} - R$ {notif.amount}</span>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notif.id); }} className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+                            <TrashIcon />
+                        </button>
+                    </div>
+                ))}
+            </div>
         </div>
 
         <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
@@ -289,7 +370,7 @@ export const NotificationGenerator: React.FC = () => {
           phoneModel={phoneModel}
           wallpaperUrl={wallpaper}
           statusBarSettings={statusBar}
-          notification={notification}
+          notifications={notifications}
           zoomLevel={zoomLevel}
           isAnimating={isAnimating}
         />
@@ -307,7 +388,7 @@ export const NotificationGenerator: React.FC = () => {
               </div>
           </div>
           <button onClick={handleOpenInTab} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"><ExternalLinkIcon/></button>
-          <button onClick={() => setNotification(INITIAL_NOTIFICATION)} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-red-500"><TrashIcon/></button>
+          <button onClick={() => handleDeleteNotification(selectedId)} className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-red-500"><TrashIcon/></button>
         </div>
         {isLoading.gif && (
             <div className="mt-2 text-sm text-center text-gray-600 dark:text-gray-400">

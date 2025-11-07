@@ -7,7 +7,7 @@ interface PhoneSimulatorProps {
   phoneModel: PhoneModel;
   wallpaperUrl: string;
   statusBarSettings: StatusBarSettings;
-  notification: NotificationData;
+  notifications: NotificationData[];
   zoomLevel: number;
   isAnimating: boolean;
 }
@@ -16,7 +16,7 @@ export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
   phoneModel,
   wallpaperUrl,
   statusBarSettings,
-  notification,
+  notifications,
   zoomLevel,
   isAnimating,
 }, ref) => {
@@ -73,9 +73,13 @@ export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
             <div style={wallpaperStyle}></div>
             <StatusBar settings={statusBarSettings} />
             {phoneModel.styles.notch && <div style={notchStyle}></div>}
-            <div className="absolute inset-0 flex items-center justify-center p-4">
-              <div className={isAnimating ? 'animate-scroll-notification' : ''}>
-                <NotificationPreview notification={notification} />
+            <div className="absolute inset-0 top-10 overflow-y-auto p-4 scrollbar-hide">
+              <div className={isAnimating ? 'animate-scroll-list' : ''}>
+                  <div className="space-y-3">
+                    {notifications.map(notification => (
+                        <NotificationPreview key={notification.id} notification={notification} />
+                    ))}
+                  </div>
               </div>
             </div>
           </div>

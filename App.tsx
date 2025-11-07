@@ -45,14 +45,14 @@ const App: React.FC = () => {
   return (
     <>
       <style>{`
-        @keyframes scroll-notification {
-          0% { transform: translateY(-100px); opacity: 0; }
-          20% { transform: translateY(0); opacity: 1; }
-          80% { transform: translateY(0); opacity: 1; }
-          100% { transform: translateY(100px); opacity: 0; }
+        @keyframes scroll-list {
+          0% { transform: translateY(0); }
+          10% { transform: translateY(0); }
+          90% { transform: translateY(-100%); }
+          100% { transform: translateY(-100%); }
         }
-        .animate-scroll-notification {
-          animation: scroll-notification 3s ease-in-out forwards;
+        .animate-scroll-list {
+          animation: scroll-list 4s ease-in-out forwards;
         }
       `}</style>
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans transition-colors duration-300">
