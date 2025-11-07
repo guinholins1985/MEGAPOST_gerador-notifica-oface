@@ -1,43 +1,22 @@
-import { Bank, TransactionType } from '../types';
+import { Bank, TransactionType } from "../types";
 
-export const BANKS: Bank[] = [
+export const bankOptions: Bank[] = [
     'Nubank',
-    'Inter',
-    'C6 Bank',
-    'PicPay',
-    'Mercado Pago',
-    'PagBank',
-    'Kiwify',
-    'Hotmart',
     'Itaú',
     'Bradesco',
-    'Santander',
     'Caixa',
     'Banco do Brasil',
-    'Sicoob',
-    'Sicredi',
-    'Original',
-    'Neon',
-    'Next',
-    'Will Bank',
-    'BTG Pactual',
-    'XP Investimentos',
-    'Ágora',
-    'Genial',
-    'ModalMais',
+    'Santander',
+    'Inter',
+    'Kiwify',
+    'Hotmart',
+    'Outro',
 ];
 
-export const TRANSACTION_TYPES: TransactionType[] = [
-    'Pix - Recebido',
-    'Pix - Enviado',
-    'Venda Aprovada',
-    'Pagamento Recebido',
-    'Pagamento de Boleto',
-    'Compra Online Aprovada',
-    'Estorno Recebido',
-    'Cashback Recebido',
-    'Rendimentos da Conta',
-    'Débito Automático',
-    'Depósito Realizado',
-    'Saque Efetuado',
+export const transactionTypeOptions: TransactionType[] = [
+    'PIX Recebido',
+    'PIX Enviado',
+    'Débito',
+    'Crédito',
+    'Transferência',
 ];

@@ -1,90 +1,58 @@
-import React, { forwardRef } from 'react';
-import { PhoneModel, StatusBarSettings, NotificationData, CSSProperties } from '../types';
-import StatusBar from './StatusBar';
-import { NotificationPreview } from './NotificationPreview';
+import React from 'react';
+import { NotificationData, PhoneModel } from '../types';
+import { phoneModels } from '../data/phoneModels';
+import { StatusBar } from './StatusBar';
 
 interface PhoneSimulatorProps {
-  phoneModel: PhoneModel;
-  wallpaperUrl: string;
-  statusBarSettings: StatusBarSettings;
-  notifications: NotificationData[];
-  zoomLevel: number;
-  scrollRef: React.RefObject<HTMLDivElement>;
+    data: NotificationData;
+    children: React.ReactNode;
+    mousePosition: { x: number, y: number };
 }
 
-export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
-  phoneModel,
-  wallpaperUrl,
-  statusBarSettings,
-  notifications,
-  zoomLevel,
-  scrollRef,
-}, ref) => {
-  const containerStyle: CSSProperties = {
-    transform: `scale(${zoomLevel})`,
-    transformOrigin: 'center',
-    transition: 'transform 0.2s ease-out',
-  };
+const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({ data, children, mousePosition }) => {
+    const model: PhoneModel | undefined = phoneModels.find(m => m.name === data.phoneModel);
 
-  const frameStyle: CSSProperties = {
-    ...phoneModel.styles.frame,
-    position: 'relative',
-    backgroundColor: '#111',
-    border: '8px solid #111',
-    overflow: 'hidden',
-  };
+    if (!model) {
+        return <div className="text-red-500">Modelo de celular não encontrado.</div>;
+    }
 
-  const screenStyle: CSSProperties = {
-    ...phoneModel.styles.screen,
-    height: '100%',
-    width: '100%',
-    position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: '#000',
-  };
+    const phoneStyle: React.CSSProperties = {
+        width: `${model.width}px`,
+        height: `${model.height}px`,
+        borderRadius: `${model.bezel + 20}px`,
+        padding: `${model.bezel}px`,
+    };
 
-  const wallpaperStyle: CSSProperties = {
-    backgroundImage: `url(${wallpaperUrl})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    height: '100%',
-    width: '100%',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  };
-  
-  const notchStyle: CSSProperties = {
-    ...phoneModel.styles.notch,
-    position: 'absolute',
-    top: 0,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: '#111',
-    borderRadius: '0 0 1rem 1rem',
-    zIndex: 10,
-  }
+    const tiltStyle: React.CSSProperties = {
+      transform: `rotateY(${(mousePosition.x / (model.width * 2) - 10)}deg) rotateX(${-(mousePosition.y / (model.height*2) - 10)}deg)`,
+      transition: 'transform 0.1s ease-out',
+    };
+    
+    const shadowStyle: React.CSSProperties = {
+      boxShadow: `${(mousePosition.x / (model.width) - 20)}px ${(mousePosition.y / (model.height) - 20)}px 40px rgba(0,0,0,0.5)`,
+       transition: 'box-shadow 0.1s ease-out',
+    }
 
-  return (
-    <div style={containerStyle} className="drop-shadow-2xl dark:drop-shadow-[0_25px_25px_rgba(29,78,216,0.15)]">
-        <div style={frameStyle} ref={ref}>
-          <div style={screenStyle}>
-            <div style={wallpaperStyle}></div>
-            <StatusBar settings={statusBarSettings} />
-            {phoneModel.styles.notch && <div style={notchStyle}></div>}
-            <div 
-              ref={scrollRef} 
-              className="absolute inset-0 top-10 overflow-y-auto p-4 scrollbar-hide"
-              style={{ maskImage: 'linear-gradient(to bottom, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 90%, transparent 100%)' }}
-            >
-              <div className="space-y-3">
-                {notifications.map(notification => (
-                    <NotificationPreview key={notification.id} notification={notification} />
-                ))}
-              </div>
+    return (
+        <div id="phone-simulator-for-download" className="relative transform scale-90 md:scale-100 origin-top" style={tiltStyle}>
+            <div style={{...phoneStyle, ...shadowStyle}} className="bg-black transition-all duration-300 ease-in-out mx-auto">
+                <div 
+                    className="relative w-full h-full bg-neutral-800 overflow-hidden" 
+                    style={{ borderRadius: `${model.bezel + 10}px` }}
+                >
+                    <img src={data.wallpaper} alt="wallpaper" className="absolute top-0 left-0 w-full h-full object-cover" crossOrigin="anonymous" />
+                    <div className="absolute top-0 left-0 w-full h-full bg-black/20"></div>
+                    <StatusBar settings={data.statusBar} />
+                    {model.notch && (
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-xl z-20"></div>
+                    )}
+                    <div className="relative z-10">
+                        {children}
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-    </div>
-  );
-});
+    );
+};
+
+export default PhoneSimulator;

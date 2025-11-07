@@ -1,5 +1,5 @@
 {
-  "name": "gerador-de-notificações-financeiras",
+  "name": "notifica-studio",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,12 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "uuid": "^13.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@google/genai": "^1.29.0",
-    "html-to-image": "^1.11.13",
-    "types": "^0.1.1",
-    "components": "^0.1.0"
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

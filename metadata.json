@@ -1,5 +1,5 @@
 {
-  "name": "Gerador de Notificações Financeiras",
-  "description": "Um aplicativo para gerar notificações falsas de transações financeiras com opções de personalização para tipo, valor, data e tom, e exportar o resultado como texto ou imagem.",
+  "name": "Notifica Studio",
+  "description": "Crie e personalize notificações de transações com uma ferramenta de design profissional movida por IA.",
   "requestFramePermissions": []
 }

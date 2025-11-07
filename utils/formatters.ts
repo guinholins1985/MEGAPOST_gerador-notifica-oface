@@ -1,8 +1,14 @@
-// utils/formatters.ts
+export const formatCurrency = (value: string): string => {
+    if (!value) return '';
+    
+    let numericValue = value.replace(/\D/g, '');
+    
+    if (numericValue === '') return '';
 
-export const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
+    let numberValue = parseFloat(numericValue) / 100;
+
+    return numberValue.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    });
 };

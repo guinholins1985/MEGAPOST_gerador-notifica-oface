@@ -1,30 +1,8 @@
-// data/phoneModels.ts
 import { PhoneModel } from '../types';
 
-export const PHONE_MODELS: PhoneModel[] = [
-  {
-    id: 'titanium-pro',
-    name: 'Titanium Pro',
-    styles: {
-      frame: { height: '610px', width: '300px', borderRadius: '3.5rem' },
-      screen: { borderRadius: '3rem' },
-      notch: { width: '120px', height: '25px' },
-    },
-  },
-  {
-    id: 'galaxy-ultra',
-    name: 'Galaxy Ultra',
-    styles: {
-      frame: { height: '620px', width: '290px', borderRadius: '1.5rem', borderWidth: '8px' },
-      screen: { borderRadius: '1.2rem' },
-    },
-  },
-  {
-    id: 'pixel-pro',
-    name: 'Pixel Pro',
-    styles: {
-      frame: { height: '600px', width: '285px', borderRadius: '2.5rem' },
-      screen: { borderRadius: '2.2rem' },
-    },
-  },
+export const phoneModels: PhoneModel[] = [
+    { name: 'iPhone 14 Pro', width: 375, height: 812, bezel: 12, notch: true },
+    { name: 'iPhone 14', width: 390, height: 844, bezel: 12, notch: true },
+    { name: 'iPhone SE', width: 375, height: 667, bezel: 16, notch: false },
+    { name: 'Galaxy S22', width: 360, height: 780, bezel: 10, notch: true },
 ];
