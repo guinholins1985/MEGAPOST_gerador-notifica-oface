@@ -61,41 +61,41 @@ const QueuePanel: React.FC<QueuePanelProps> = ({ notifications, setNotifications
   }
 
   return (
-    <div className={`bg-neutral-900 rounded-lg border border-neutral-800 flex flex-col h-full transition-all duration-300 ease-in-out animate-slide-in-from-left ${isCollapsed ? 'w-16' : 'w-full'}`}>
-        <div className={`p-4 flex items-center justify-between border-b border-neutral-800 ${isCollapsed ? 'flex-col' : ''}`}>
-          <div className="flex items-center space-x-3">
-              <SquareStackIcon className="w-6 h-6 text-neutral-400"/>
-              {!isCollapsed && <h2 className="font-bold text-lg text-white">Camadas</h2>}
+    <div className={`bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 flex flex-col h-full transition-all duration-300 ease-in-out animate-slide-in-from-left shadow-medium ${isCollapsed ? 'w-16' : 'w-full'}`}>
+        <div className={`p-4 flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800`}>
+          <div className={`flex items-center space-x-3 overflow-hidden transition-opacity ${isCollapsed ? 'opacity-0' : 'opacity-100'}`}>
+              <SquareStackIcon className="w-6 h-6 text-neutral-500 dark:text-neutral-400 flex-shrink-0"/>
+              <h2 className="font-bold text-lg text-neutral-900 dark:text-white whitespace-nowrap">Camadas</h2>
           </div>
-          <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-1 rounded-md hover:bg-neutral-800 text-neutral-400">
+          <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-1 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
             <ChevronLeftIcon className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
           </button>
         </div>
 
-        <div className={`flex-grow overflow-y-auto p-2 space-y-2 ${isCollapsed ? 'hidden' : ''}`}>
+        <div className={`flex-grow overflow-y-auto p-2 space-y-2 custom-scrollbar ${isCollapsed ? 'hidden' : ''}`}>
             {notifications.map(item => (
                 <div 
                     key={item.id} 
                     onClick={() => setSelectedNotificationId(item.id)}
-                    className={`p-2 rounded-md flex justify-between items-center text-left cursor-pointer transition-colors ${selectedNotificationId === item.id ? 'bg-primary-600/20' : 'hover:bg-neutral-800/50'}`}
+                    className={`p-2 rounded-md flex justify-between items-center text-left cursor-pointer transition-colors ${selectedNotificationId === item.id ? 'bg-primary-500/10 dark:bg-primary-600/20' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800/50'}`}
                 >
                     <div className="text-sm overflow-hidden pr-2">
-                        <span className={`font-semibold block truncate ${selectedNotificationId === item.id ? 'text-primary-300' : 'text-neutral-100'}`}>{item.customBankName || item.bank}</span>
-                        <span className={`block truncate text-xs ${selectedNotificationId === item.id ? 'text-primary-400' : 'text-neutral-400'}`}>{item.value} para {item.recipient}</span>
+                        <span className={`font-semibold block truncate ${selectedNotificationId === item.id ? 'text-primary-700 dark:text-primary-300' : 'text-neutral-800 dark:text-neutral-100'}`}>{item.customBankName || item.bank}</span>
+                        <span className={`block truncate text-xs ${selectedNotificationId === item.id ? 'text-primary-600 dark:text-primary-400' : 'text-neutral-500 dark:text-neutral-400'}`}>{item.value} para {item.recipient}</span>
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); removeNotification(item.id); }} className="text-neutral-500 hover:text-red-500 flex-shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); removeNotification(item.id); }} className="text-neutral-400 dark:text-neutral-500 hover:text-red-500 flex-shrink-0">
                         <TrashIcon className="w-4 h-4" />
                     </button>
                 </div>
             ))}
         </div>
         
-        <div className={`p-4 border-t border-neutral-800 space-y-2 ${isCollapsed ? 'hidden' : ''}`}>
-             <button onClick={addNewNotification} className="w-full flex justify-center items-center px-4 py-2 border border-neutral-700 text-sm font-semibold rounded-md shadow-sm text-white bg-neutral-800 hover:bg-neutral-700 transition-colors">
+        <div className={`p-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2 ${isCollapsed ? 'hidden' : ''}`}>
+             <button onClick={addNewNotification} className="w-full flex justify-center items-center px-4 py-2 border border-neutral-300 dark:border-neutral-700 text-sm font-semibold rounded-md shadow-soft text-neutral-700 dark:text-white bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
                 <PlusIcon className="w-5 h-5 mr-2" />
                 Adicionar Nova
             </button>
-            <button onClick={() => {}} className="w-full flex justify-center items-center px-4 py-2 border border-primary-500/30 text-sm font-semibold rounded-md shadow-sm text-primary-300 bg-primary-600/20 hover:bg-primary-600/30 transition-colors">
+            <button onClick={() => {}} className="w-full flex justify-center items-center px-4 py-2 border border-primary-500/30 text-sm font-semibold rounded-md shadow-soft text-primary-600 dark:text-primary-300 bg-primary-500/10 dark:bg-primary-600/20 hover:bg-primary-500/20 dark:hover:bg-primary-600/30 transition-colors">
                 <SparklesIcon className="w-5 h-5 mr-2" />
                 Adicionar com IA
             </button>

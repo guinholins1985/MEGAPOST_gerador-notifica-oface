@@ -123,6 +123,6 @@ export const WifiIcon: React.FC<{ bars: number }> = ({ bars }) => (
 export const BatteryIcon: React.FC<{ level: number }> = ({ level }) => (
     <div className={`relative w-6 h-3 border rounded`}>
         <div className="absolute top-[1px] left-[1px] h-[calc(100%-2px)] bg-current rounded-sm" style={{ width: `calc(${level}% - 2px)` }}></div>
-        <div className={`absolute -right-1 top-1/2 -translate-y-1/2 w-0.5 h-1.5 bg-current`}></div>
+        <div className={`absolute -right-1 top-1/2 -translate-y-1.5 w-0.5 h-1.5 bg-current`}></div>
     </div>
 );

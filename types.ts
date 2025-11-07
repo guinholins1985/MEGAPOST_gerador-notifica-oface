@@ -1,5 +1,15 @@
 export type Bank = 'Nubank' | 'Itaú' | 'Bradesco' | 'Caixa' | 'Banco do Brasil' | 'Santander' | 'Inter' | 'Kiwify' | 'Hotmart' | 'Outro';
-export type TransactionType = 'PIX Recebido' | 'PIX Enviado' | 'Débito' | 'Crédito' | 'Transferência';
+export type TransactionType = 
+  | 'PIX Recebido' 
+  | 'PIX Enviado' 
+  | 'Débito' 
+  | 'Crédito' 
+  | 'Transferência'
+  | 'Pagamento de Boleto'
+  | 'Recarga de Celular'
+  | 'Aplicação em Investimento'
+  | 'Resgate de Investimento'
+  | 'Rendimento';
 
 export interface NotificationData {
   id: string;

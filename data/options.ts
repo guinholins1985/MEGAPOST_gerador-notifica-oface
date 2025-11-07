@@ -19,4 +19,9 @@ export const transactionTypeOptions: TransactionType[] = [
     'Débito',
     'Crédito',
     'Transferência',
+    'Pagamento de Boleto',
+    'Recarga de Celular',
+    'Aplicação em Investimento',
+    'Resgate de Investimento',
+    'Rendimento',
 ];

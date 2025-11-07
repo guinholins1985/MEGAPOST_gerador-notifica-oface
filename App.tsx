@@ -33,7 +33,11 @@ function App() {
   const [presets, setPresets] = useState<Preset[]>([]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [theme]);
 
   const toggleTheme = () => {
@@ -47,7 +51,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans antialiased text-neutral-100">
+    <div className="min-h-screen flex flex-col font-sans antialiased text-neutral-800 dark:text-neutral-100">
       <Header theme={theme} toggleTheme={toggleTheme} />
       <NotificationGenerator
         notifications={notifications}

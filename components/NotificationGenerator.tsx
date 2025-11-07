@@ -43,7 +43,7 @@ const NotificationGenerator: React.FC<NotificationGeneratorProps> = ({
 
   return (
     <main 
-      className="flex-grow grid grid-cols-1 lg:grid-cols-[280px_1fr_320px] xl:grid-cols-[320px_1fr_360px] gap-4 p-4 overflow-hidden"
+      className="flex-grow grid grid-cols-1 lg:grid-cols-[280px_320px_1fr] xl:grid-cols-[320px_360px_1fr] gap-4 p-4 overflow-hidden"
       onMouseMove={handleMouseMove}
     >
       <QueuePanel
@@ -52,12 +52,6 @@ const NotificationGenerator: React.FC<NotificationGeneratorProps> = ({
         selectedNotificationId={selectedNotification?.id || null}
         setSelectedNotificationId={setSelectedNotificationId}
       />
-      
-      <div className="flex items-center justify-center h-full relative overflow-hidden">
-        <PhoneSimulator data={selectedNotification} mousePosition={mousePosition}>
-          <NotificationPreview data={selectedNotification} />
-        </PhoneSimulator>
-      </div>
 
       <InspectorPanel
         data={selectedNotification}
@@ -65,6 +59,12 @@ const NotificationGenerator: React.FC<NotificationGeneratorProps> = ({
         presets={presets}
         setPresets={setPresets}
       />
+      
+      <div className="flex items-center justify-center h-full relative overflow-hidden">
+        <PhoneSimulator data={selectedNotification} mousePosition={mousePosition}>
+          <NotificationPreview data={selectedNotification} />
+        </PhoneSimulator>
+      </div>
     </main>
   );
 };
