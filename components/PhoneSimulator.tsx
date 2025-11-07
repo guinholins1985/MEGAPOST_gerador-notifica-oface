@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { PhoneModel, StatusBarSettings, NotificationData, CSSProperties } from '../types';
 import StatusBar from './StatusBar';
 import { NotificationPreview } from './NotificationPreview';
@@ -8,14 +8,24 @@ interface PhoneSimulatorProps {
   wallpaperUrl: string;
   statusBarSettings: StatusBarSettings;
   notification: NotificationData;
+  zoomLevel: number;
+  isAnimating: boolean;
 }
 
-export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
+export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
   phoneModel,
   wallpaperUrl,
   statusBarSettings,
   notification,
-}) => {
+  zoomLevel,
+  isAnimating,
+}, ref) => {
+  const containerStyle: CSSProperties = {
+    transform: `scale(${zoomLevel})`,
+    transformOrigin: 'center',
+    transition: 'transform 0.2s ease-out',
+  };
+
   const frameStyle: CSSProperties = {
     ...phoneModel.styles.frame,
     position: 'relative',
@@ -57,15 +67,19 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
   }
 
   return (
-    <div style={frameStyle}>
-      <div style={screenStyle}>
-        <div style={wallpaperStyle}></div>
-        <StatusBar settings={statusBarSettings} />
-        {phoneModel.styles.notch && <div style={notchStyle}></div>}
-        <div className="absolute inset-0 flex items-center justify-center p-4">
-          <NotificationPreview notification={notification} />
+    <div style={containerStyle}>
+        <div style={frameStyle} ref={ref}>
+          <div style={screenStyle}>
+            <div style={wallpaperStyle}></div>
+            <StatusBar settings={statusBarSettings} />
+            {phoneModel.styles.notch && <div style={notchStyle}></div>}
+            <div className="absolute inset-0 flex items-center justify-center p-4">
+              <div className={isAnimating ? 'animate-scroll-notification' : ''}>
+                <NotificationPreview notification={notification} />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
     </div>
   );
-};
+});

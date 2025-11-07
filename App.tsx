@@ -43,26 +43,39 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans transition-colors duration-300">
-      <header className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-        <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gerador de Notificações</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Crie e personalize alertas de transações financeiras para qualquer finalidade.
-            </p>
-        </div>
-        <button
-          onClick={toggleDarkMode}
-          className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500"
-          aria-label="Toggle dark mode"
-        >
-          {isDarkMode ? <SunIcon /> : <MoonIcon />}
-        </button>
-      </header>
-      <main className="p-4 sm:p-6 md:p-8">
-        <NotificationGenerator />
-      </main>
-    </div>
+    <>
+      <style>{`
+        @keyframes scroll-notification {
+          0% { transform: translateY(-100px); opacity: 0; }
+          20% { transform: translateY(0); opacity: 1; }
+          80% { transform: translateY(0); opacity: 1; }
+          100% { transform: translateY(100px); opacity: 0; }
+        }
+        .animate-scroll-notification {
+          animation: scroll-notification 3s ease-in-out forwards;
+        }
+      `}</style>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans transition-colors duration-300">
+        <header className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+          <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gerador de Notificações</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Crie e personalize alertas de transações financeiras para qualquer finalidade.
+              </p>
+          </div>
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <SunIcon /> : <MoonIcon />}
+          </button>
+        </header>
+        <main className="p-4 sm:p-6 md:p-8">
+          <NotificationGenerator />
+        </main>
+      </div>
+    </>
   );
 };
 
