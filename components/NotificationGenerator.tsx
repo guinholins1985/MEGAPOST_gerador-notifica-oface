@@ -381,7 +381,7 @@ export const NotificationGenerator: React.FC = () => {
         </Accordion>
       </div>
 
-      <div className="lg:col-span-1 flex flex-col items-center justify-center sticky top-24">
+      <div className="lg:col-span-1 flex flex-col items-center justify-start lg:sticky top-8 mt-8 lg:mt-0">
         <PhoneSimulator 
           ref={phoneRef}
           scrollRef={scrollRef}
@@ -391,8 +391,8 @@ export const NotificationGenerator: React.FC = () => {
           notifications={notifications}
           zoomLevel={zoomLevel}
         />
-        <div className="mt-8 w-full max-w-sm flex flex-col items-center gap-4">
-            <div className="w-full grid grid-cols-2 gap-2 p-2 bg-white/70 dark:bg-neutral-800/70 rounded-2xl shadow-medium backdrop-blur-lg">
+        <div className="mt-6 w-full max-w-sm flex flex-col items-center gap-3">
+            <div className="w-full flex flex-col sm:grid sm:grid-cols-2 gap-2 p-1.5 bg-white/70 dark:bg-neutral-800/70 rounded-2xl shadow-medium backdrop-blur-lg">
                 <div className='flex items-center justify-center gap-1'>
                   <button onClick={() => setZoomLevel(z => Math.max(0.2, z - 0.1))} className="toolbar-button" aria-label="Diminuir zoom"><ZoomOutIcon/></button>
                   <span className='text-xs font-mono w-10 text-center'>{Math.round(zoomLevel*100)}%</span>
@@ -403,32 +403,32 @@ export const NotificationGenerator: React.FC = () => {
                   <button onClick={() => handleDeleteNotification(selectedId)} className="toolbar-button text-red-500" aria-label="Excluir notificação selecionada"><TrashIcon/></button>
                 </div>
             </div>
-            <button onClick={handleDownloadPng} disabled={isLoading.png} className="w-full toolbar-button-text bg-primary-600 text-white disabled:bg-primary-400 hover:bg-primary-700">
+            <button onClick={handleDownloadPng} disabled={isLoading.png} className="w-full toolbar-button-text">
                 {isLoading.png ? <SpinnerIcon/> : <DownloadIcon/>} Baixar Imagem (PNG)
             </button>
         </div>
       </div>
        <style>{`
         .form-select, .form-input {
-          @apply block w-full pl-3 pr-10 py-2.5 text-base border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent sm:text-sm rounded-lg transition-colors;
+          @apply block w-full pl-3 pr-10 py-2.5 text-base border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-200 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 sm:text-sm rounded-xl transition-colors shadow-sm;
         }
         .form-radio {
-          @apply h-4 w-4 text-primary-600 border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 focus:ring-primary-500;
+          @apply h-4 w-4 text-primary-600 border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 focus:ring-primary-500/50;
         }
         .form-button-icon {
-          @apply flex-shrink-0 cursor-pointer p-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 transition-colors;
+          @apply flex-shrink-0 cursor-pointer p-2.5 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 transition-colors shadow-sm;
         }
         .form-range {
           @apply w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700;
         }
         .form-range::-webkit-slider-thumb {
-          @apply w-4 h-4 bg-primary-600 rounded-full appearance-none transition-transform active:scale-125;
+          @apply w-4 h-4 bg-primary-600 rounded-full appearance-none transition-transform active:scale-125 cursor-pointer;
         }
         .toolbar-button {
-          @apply p-2.5 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700/50 transition-colors;
+          @apply flex-1 p-2.5 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700/50 transition-colors;
         }
         .toolbar-button-text {
-          @apply w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-colors;
+          @apply w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ease-in-out bg-primary-600 text-white border-b-4 border-primary-700 dark:border-primary-800 hover:bg-primary-500 active:translate-y-0.5 active:border-b-2 disabled:opacity-50;
         }
        `}</style>
     </div>
