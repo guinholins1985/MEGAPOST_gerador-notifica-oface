@@ -25,9 +25,8 @@ const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setIsDarkMode(true);
-    }
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDark);
   }, []);
 
   useEffect(() => {
@@ -43,18 +42,19 @@ const App: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans transition-colors duration-300">
-        <header className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 font-sans transition-colors duration-300">
+      <div className="absolute inset-0 z-0 opacity-50 dark:opacity-20" style={{backgroundImage: `radial-gradient(#d1d5db 1px, transparent 1px)`, backgroundSize: `16px 16px`}}></div>
+      <div className="relative z-10">
+        <header className="p-4 sm:p-6 flex justify-between items-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-lg border-b border-neutral-200 dark:border-neutral-800 sticky top-0">
           <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gerador de Notificações</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Crie e personalize alertas de transações financeiras para qualquer finalidade.
+              <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Gerador de Notificações</h1>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                  Crie e personalize alertas de transações com um design profissional.
               </p>
           </div>
           <button
             onClick={toggleDarkMode}
-            className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500"
+            className="p-2 rounded-full text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900 focus:ring-primary-500 transition-colors"
             aria-label="Toggle dark mode"
           >
             {isDarkMode ? <SunIcon /> : <MoonIcon />}
@@ -64,7 +64,7 @@ const App: React.FC = () => {
           <NotificationGenerator />
         </main>
       </div>
-    </>
+    </div>
   );
 };
 

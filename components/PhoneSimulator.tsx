@@ -30,7 +30,6 @@ export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
     ...phoneModel.styles.frame,
     position: 'relative',
     backgroundColor: '#111',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
     border: '8px solid #111',
     overflow: 'hidden',
   };
@@ -67,7 +66,7 @@ export const PhoneSimulator = forwardRef<HTMLDivElement, PhoneSimulatorProps>(({
   }
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} className="drop-shadow-2xl dark:drop-shadow-[0_25px_25px_rgba(29,78,216,0.15)]">
         <div style={frameStyle} ref={ref}>
           <div style={screenStyle}>
             <div style={wallpaperStyle}></div>
