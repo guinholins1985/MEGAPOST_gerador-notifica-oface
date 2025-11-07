@@ -30,6 +30,9 @@ export const NotificationGenerator: React.FC = () => {
   
   const [phoneModel, setPhoneModel] = useState<PhoneModel>(PHONE_MODELS[0]);
   const [wallpaper, setWallpaper] = useState<string>(WALLPAPERS[0].url);
+  const [processedWallpaperUrl, setProcessedWallpaperUrl] = useState<string>(wallpaper);
+  const [wallpaperError, setWallpaperError] = useState(false);
+
   const [statusBar, setStatusBar] = useState<StatusBarSettings>({
     time: '09:41', wifi: true, signal: 4, battery: 88,
   });
@@ -41,6 +44,68 @@ export const NotificationGenerator: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const selectedNotification = notifications.find(n => n.id === selectedId) || null;
+
+  useEffect(() => {
+    let isMounted = true;
+    let objectUrl: string | undefined;
+
+    setWallpaperError(false);
+
+    const process = () => {
+        if (wallpaper.startsWith('http')) {
+            fetch(wallpaper)
+                .then(res => {
+                    if (!res.ok) throw new Error(`Network response was not ok for ${wallpaper}`);
+                    return res.blob();
+                })
+                .then(blob => {
+                    objectUrl = URL.createObjectURL(blob);
+                    if (isMounted) {
+                        setProcessedWallpaperUrl(prevUrl => {
+                            if (prevUrl.startsWith('blob:')) URL.revokeObjectURL(prevUrl);
+                            return objectUrl!;
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to process wallpaper:", err);
+                    if (isMounted) {
+                        setWallpaperError(true);
+                        setProcessedWallpaperUrl(prevUrl => {
+                            if (prevUrl.startsWith('blob:')) URL.revokeObjectURL(prevUrl);
+                            return wallpaper;
+                        });
+                    }
+                });
+        } else {
+            // Handle data URLs (from upload or AI generation)
+            setProcessedWallpaperUrl(prevUrl => {
+                if (prevUrl.startsWith('blob:')) URL.revokeObjectURL(prevUrl);
+                return wallpaper;
+            });
+        }
+    }
+    
+    process();
+
+    return () => {
+        isMounted = false;
+        // If component unmounts before fetch completes, revoke URL if created
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+        }
+    };
+  }, [wallpaper]);
+
+  useEffect(() => {
+    // Final cleanup on component unmount
+    return () => {
+        if (processedWallpaperUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(processedWallpaperUrl);
+        }
+    };
+  }, []);
+
 
   const setLoading = (key: string, value: boolean) => {
     setIsLoading(prev => ({ ...prev, [key]: value }));
@@ -169,15 +234,20 @@ export const NotificationGenerator: React.FC = () => {
     try {
       if (format === 'png') {
         const canvas = await html2canvas(element, {
+            allowTaint: true,
             useCORS: true,
             backgroundColor: null,
             scale: 2,
         });
         const dataUrl = canvas.toDataURL('image/png');
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = 'notificacao.png';
-        link.href = dataUrl;
+        link.href = url;
         link.click();
+        URL.revokeObjectURL(url);
       } else if (format === 'gif') {
         const scroller = scrollRef.current;
         if (!scroller) {
@@ -191,7 +261,7 @@ export const NotificationGenerator: React.FC = () => {
         await new Promise(r => setTimeout(r, 200)); 
         
         if (scrollDistance <= 0) {
-            const canvas = await html2canvas(element, { useCORS: true, backgroundColor: null });
+            const canvas = await html2canvas(element, { allowTaint: true, useCORS: true, backgroundColor: null });
             gif.addFrame(canvas, { delay: 2000 });
         } else {
             const animationDuration = 4000;
@@ -206,6 +276,7 @@ export const NotificationGenerator: React.FC = () => {
                 await new Promise(r => setTimeout(r, 30)); 
                 
                 const canvas = await html2canvas(element, { 
+                    allowTaint: true,
                     useCORS: true, 
                     backgroundColor: null,
                     logging: false
@@ -237,6 +308,7 @@ export const NotificationGenerator: React.FC = () => {
     if (!phoneRef.current) return;
     try {
       const canvas = await html2canvas(phoneRef.current, {
+        allowTaint: true,
         useCORS: true,
         backgroundColor: null,
         scale: 2,
@@ -364,6 +436,11 @@ export const NotificationGenerator: React.FC = () => {
                         <UploadIcon /><input id="customWallpaper" type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'wallpaper')} />
                       </label>
                     </div>
+                    {wallpaperError && (
+                        <div className="mt-2 text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 p-2 rounded-md">
+                            <p>Aviso: Não foi possível carregar o papel de parede. A exportação de imagem pode falhar. Tente outro ou faça upload de um.</p>
+                        </div>
+                    )}
                     <div className="mt-2 space-y-2">
                         <label htmlFor="wallpaper-prompt" className="text-sm font-medium text-gray-700 dark:text-gray-300">Gerar papel de parede com IA</label>
                         <div className="flex gap-2">
@@ -405,7 +482,7 @@ export const NotificationGenerator: React.FC = () => {
           ref={phoneRef}
           scrollRef={scrollRef}
           phoneModel={phoneModel}
-          wallpaperUrl={wallpaper}
+          wallpaperUrl={processedWallpaperUrl}
           statusBarSettings={statusBar}
           notifications={notifications}
           zoomLevel={zoomLevel}
